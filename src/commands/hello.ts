@@ -9,15 +9,31 @@ hello world from ./src/hello.ts!
 `,
   ]
 
+  // https://oclif.io/docs/flags
   static flags = {
-    help: flags.help({char: 'h'}),
+    help: flags.help({
+      char: 'h'
+    }),
     // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
+    name: flags.string({
+      char: 'n',
+      description: 'name to print',
+      multiple: false,
+      default: 'world',
+      required: false,
+
+    }),
     // flag with no value (-f, --force)
     force: flags.boolean({char: 'f'}),
   }
 
-  static args = [{name: 'file'}]
+  // https://oclif.io/docs/args
+  static args = [{
+    name: 'file',
+    required: true,
+    description: 'output file',
+    default: 'world'
+  }]
 
   async run() {
     const {args, flags} = this.parse(Hello)
@@ -27,5 +43,11 @@ hello world from ./src/hello.ts!
     if (args.file && flags.force) {
       this.log(`you input --force and --file: ${args.file}`)
     }
+    // show a warning
+    this.warn('uh oh!')
+    // exit with an error message
+    this.error('uh oh!!!', {exit: 2})
+    // exit with status code
+    this.exit(1)
   }
 }
