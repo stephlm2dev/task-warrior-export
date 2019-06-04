@@ -41,7 +41,7 @@
   "keywords": [
     "oclif"
   ],
-  "license": "GNU",
+  "license": "AGPL-3.0-only",
   "main": "lib/index.js",
   "oclif": {
     "commands": "./lib/commands",
