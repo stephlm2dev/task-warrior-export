@@ -1,6 +1,8 @@
 import { Command, flags } from '@oclif/command'
-import { prompt, Question } from 'inquirer'
+import { prompt, Question, Separator } from 'inquirer'
 import * as moment from 'moment'
+import { EOL } from 'os'
+import { exec, which } from 'shelljs'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -59,11 +61,14 @@ export default class Export extends Command {
    * Entrypoint of the `twe export` command
    */
   async run() {
-    let {flags} = this.parse(Export)
+    let { flags } = this.parse(Export)
     const availableFlags = this.availableFlags()
     const missingFlags = availableFlags.filter(el => !(el in flags))
 
-    // Step 1 - check flags values (or exit)
+    // Step 1 - check requirements
+    this.checkRequirements()
+
+    // Step 2 - check flags values (or exit)
     if (missingFlags.length !== 0) {
       if (flags.interactive) {
         const missingFlagsData = await this.askMissingFlags(missingFlags)
@@ -73,11 +78,11 @@ export default class Export extends Command {
       }
     }
 
-    // (FIXME) Step 2 - Verify
-    // (FIXME) Step 3 - Extract data
-    // (FIXME) Step 4 - Filter data
-    // (FIXME) Step 5 - Aggregate data
-    // (FIXME) Step 6 - Save data
+    // (FIXME) Step 3 - Verify
+    // (FIXME) Step 4 - Extract data
+    // (FIXME) Step 5 - Filter data
+    // (FIXME) Step 6 - Aggregate data
+    // (FIXME) Step 7 - Save data
   }
 
   /**
@@ -87,6 +92,19 @@ export default class Export extends Command {
     return Object.keys(Export.flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
+  }
+
+  /**
+   * Check that Taskwarrior and Timewarrior are installed
+   */
+  private checkRequirements() {
+    if (!which('task')) {
+      this.error('Taskwarrior is required', { exit: 2 })
+    }
+
+    if (!which('timew')) {
+      this.error('Timewarrior is required', { exit: 1 })
+    }
   }
 
   /**
@@ -138,15 +156,18 @@ export default class Export extends Command {
 
   /**
    * InquirerJS question for project
-   * FIXME get project from TaskWarrior
    */
   private askProject(availableProjects: Array<string>): Question {
+    const command = 'task rc.list.all.projects=1 _projects'
+    const { stdout, stderr, code } = exec(command, { silent: true })
+    const projects = stdout.trim().split(EOL)
     return {
       type: 'list',
       name: 'project',
       message: 'Which project ?',
-      default: '#project',
-      choices: ['#project', '#test'],
+      default: projects[0],
+      choices: projects,
+      pageSize: projects.length
     }
   }
 
