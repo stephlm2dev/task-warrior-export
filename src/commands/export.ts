@@ -146,7 +146,7 @@ export default class Export extends Command {
       name: 'project',
       message: 'Which project ?',
       default: '#project',
-      choices: ['#project', '#test']
+      choices: ['#project', '#test'],
     }
   }
 
@@ -158,22 +158,40 @@ export default class Export extends Command {
     return {
       type: 'input',
       name: 'from',
-      message: 'From which date ?',
-      default: moment().startOf('month').format('YYYY-MM-DD')
+      message: 'From which date (YYYY-MM-DD) ?',
+      default: moment().startOf('month').format('YYYY-MM-DD'),
+      validate: this.validateDateFormat
     }
   }
 
   /**
    * InquirerJS question for end date export
-   * FIXME validate ! (use of moment.js)
    */
   private askEndDate(): Question {
     return {
       type: 'input',
       name: 'to',
-      message: 'Until which date ?',
-      default: moment().endOf('month').format('YYYY-MM-DD')
+      message: 'Until which date (YYYY-MM-DD) ?',
+      default: moment().endOf('month').format('YYYY-MM-DD'),
+      validate: this.validateDateFormat
     }
+  }
+
+  /**
+   * Validation for input date
+   * Must be a valid date
+   * If 'from' is present, check if 'to' after 'from'
+   */
+  private validateDateFormat(date: string, answers: any) {
+    const momentDate = moment(date, 'YYYY-MM-DD', true)
+    if (!momentDate.isValid()) {
+      return 'Invalid date (YYYY-MM-DD)'
+    }
+    if ('from' in answers) {
+      const momentFrom = moment(answers.from)
+      return momentDate.isAfter(momentFrom) || 'Date is not in the future'
+    }
+    return true
   }
 
   /**
