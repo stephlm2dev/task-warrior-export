@@ -1,5 +1,6 @@
 import { Command, flags } from '@oclif/command'
 import { prompt, Question } from 'inquirer'
+import * as moment from 'moment'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -143,7 +144,7 @@ export default class Export extends Command {
     return {
       type: 'list',
       name: 'project',
-      message: 'Which project do you want to export ?',
+      message: 'Which project ?',
       default: '#project',
       choices: ['#project', '#test']
     }
@@ -151,29 +152,27 @@ export default class Export extends Command {
 
   /**
    * InquirerJS question for start date export
-   * FIXME calculate start of the moment as string (YYYY-MM-DD)
    * valide ! (use of moment.js)
    */
   private askStartDate(): Question {
     return {
       type: 'input',
       name: 'from',
-      message: 'From which date do you want your export ?',
-      default: '2019-06-01'
+      message: 'From which date ?',
+      default: moment().startOf('month').format('YYYY-MM-DD')
     }
   }
 
   /**
    * InquirerJS question for end date export
-   * FIXME calculate end of the moment as string (YYYY-MM-DD)
    * FIXME validate ! (use of moment.js)
    */
   private askEndDate(): Question {
     return {
       type: 'input',
       name: 'to',
-      message: 'Until which date do you want your export ?',
-      default: '2019-06-31'
+      message: 'Until which date ?',
+      default: moment().endOf('month').format('YYYY-MM-DD')
     }
   }
 
