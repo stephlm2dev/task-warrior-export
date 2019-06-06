@@ -64,6 +64,7 @@ export default class Export extends Command {
     let { flags } = this.parse(Export)
     const availableFlags = this.availableFlags()
     const missingFlags = availableFlags.filter(el => !(el in flags))
+    const availableProjects = this.availableProjects()
 
     // Step 1 - check requirements
     const validRequirements = this.checkRequirements()
@@ -74,14 +75,21 @@ export default class Export extends Command {
     // Step 2 - check flags values (or exit)
     if (missingFlags.length !== 0) {
       if (flags.interactive) {
-        const missingFlagsData = await this.askMissingFlags(missingFlags)
+        const missingFlagsData = await this.askMissingFlags(
+          missingFlags, availableProjects
+        )
         flags = { ...flags, ...missingFlagsData }
       } else {
-        this.error('Missing parameters', { exit: 2 })
+        this.error('Missing parameters', { exit: 3 })
       }
     }
 
-    // (FIXME) Step 3 - Verify
+    // Step 3 - Verify params
+    const validParams = this.checkFlags(flags, availableProjects)
+    if (validParams !== true) {
+      this.error(validRequirements, { exit: 4 })
+    }
+
     // (FIXME) Step 4 - Extract data
     // (FIXME) Step 5 - Filter data
     // (FIXME) Step 6 - Aggregate data
@@ -95,6 +103,15 @@ export default class Export extends Command {
     return Object.keys(Export.flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
+  }
+
+  /**
+   * List all projects from Taskwarrior
+   */
+  private availableProjects() {
+    const command = 'task rc.list.all.projects=1 _projects'
+    const { stdout, stderr, code } = exec(command, { silent: true })
+    return stdout.trim().split(EOL)
   }
 
   /**
@@ -114,7 +131,9 @@ export default class Export extends Command {
   /**
    * Ask user for missing flags
    */
-  private async askMissingFlags(missingFlags: Array<string>) {
+  private async askMissingFlags(
+    missingFlags: Array<string>, availableProjects: Array<string>
+  ) {
     const questions = missingFlags.map(el => {
       let input = null
       switch (el) {
@@ -122,7 +141,7 @@ export default class Export extends Command {
           input = this.askFormat()
           break
         case 'project':
-          input = this.askProject()
+          input = this.askProject(availableProjects)
           break
         case 'from':
           input = this.askStartDate()
@@ -162,16 +181,13 @@ export default class Export extends Command {
    * InquirerJS question for project
    */
   private askProject(availableProjects: Array<string>): Question {
-    const command = 'task rc.list.all.projects=1 _projects'
-    const { stdout, stderr, code } = exec(command, { silent: true })
-    const projects = stdout.trim().split(EOL)
     return {
       type: 'list',
       name: 'project',
       message: 'Which project ?',
-      default: projects[0],
-      choices: projects,
-      pageSize: projects.length
+      default: availableProjects[0],
+      choices: availableProjects,
+      pageSize: availableProjects.length
     }
   }
 
@@ -226,5 +242,13 @@ export default class Export extends Command {
    */
   private async askUser(questions: Array<Question>) {
     return prompt(questions)
+  }
+
+  /**
+   * Check if all params are valid
+   */
+  private checkFlags(flags, availableProjects: Array<string>) {
+    // map or every ?
+    return true
   }
 }
