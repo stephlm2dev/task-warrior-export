@@ -66,7 +66,10 @@ export default class Export extends Command {
     const missingFlags = availableFlags.filter(el => !(el in flags))
 
     // Step 1 - check requirements
-    this.checkRequirements()
+    const validRequirements = this.checkRequirements()
+    if (validRequirements !== true) {
+      this.error(validRequirements, { exit: 2 })
+    }
 
     // Step 2 - check flags values (or exit)
     if (missingFlags.length !== 0) {
@@ -97,14 +100,15 @@ export default class Export extends Command {
   /**
    * Check that Taskwarrior and Timewarrior are installed
    */
-  private checkRequirements() {
+  private checkRequirements(): string | boolean {
     if (!which('task')) {
-      this.error('Taskwarrior is required', { exit: 2 })
+      return 'Taskwarrior is required'
     }
 
     if (!which('timew')) {
-      this.error('Timewarrior is required', { exit: 1 })
+      return 'Timewarrior is required'
     }
+    return true
   }
 
   /**
