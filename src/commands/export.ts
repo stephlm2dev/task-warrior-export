@@ -67,9 +67,14 @@ export default class Export extends Command {
     const availableProjects = this.availableProjects()
 
     // Step 1 - check requirements
-    const validRequirements = this.checkRequirements()
-    if (validRequirements !== true) {
-      this.error(validRequirements, { exit: 2 })
+    const invalidRequirements = this.checkRequirements()
+    if (invalidRequirements.length !== 0) {
+      const plural = (invalidRequirements.length > 1) ? 's' : ''
+      let errorMessage = `missing requirement${plural} EOL`
+      errorMessage += invalidRequirements.map(executable => {
+        return `• ${executable.name} is required (command '${executable.cmd}')`
+      }).join(EOL)
+      this.error(errorMessage, { exit: 2 })
     }
 
     // Step 2 - check flags values (or exit)
@@ -117,15 +122,15 @@ export default class Export extends Command {
   /**
    * Check that Taskwarrior and Timewarrior are installed
    */
-  private checkRequirements(): string | boolean {
-    if (!which('task')) {
-      return 'Taskwarrior is required'
-    }
-
-    if (!which('timew')) {
-      return 'Timewarrior is required'
-    }
-    return true
+  private checkRequirements(): Array<string> {
+    const executables = [
+      { name: 'Taskwarrior', cmd: 'task' },
+      { name: 'Timewarrior', cmd: 'timew' }
+    ]
+    return executables.reduce((acc, executable) => {
+      const installed = which(executable.cmd)
+      return installed ? acc : acc.concat([executable])
+    }, [])
   }
 
   /**
