@@ -64,13 +64,16 @@ export default class Export extends Command {
     let { flags } = this.parse(Export)
     const availableFlags = this.availableFlags()
     const missingFlags = availableFlags.filter(el => !(el in flags))
-    const availableProjects = this.availableProjects()
+    const availableFlagsValues = {
+      formats: this.availableFormats(),
+      projects: this.availableProjects()
+    }
 
     // Step 1 - check requirements
     const invalidRequirements = this.checkRequirements()
     if (invalidRequirements.length !== 0) {
       const plural = (invalidRequirements.length > 1) ? 's' : ''
-      let errorMessage = `missing requirement${plural} EOL`
+      let errorMessage = `missing requirement${plural} ${EOL}`
       errorMessage += invalidRequirements.map(executable => {
         return `• ${executable.name} is required (command '${executable.cmd}')`
       }).join(EOL)
@@ -81,7 +84,7 @@ export default class Export extends Command {
     if (missingFlags.length !== 0) {
       if (flags.interactive) {
         const missingFlagsData = await this.askMissingFlags(
-          missingFlags, availableProjects
+          missingFlags, availableFlagsValues
         )
         flags = { ...flags, ...missingFlagsData }
       } else {
@@ -89,10 +92,18 @@ export default class Export extends Command {
       }
     }
 
+    // Step 2.1 - remove 'interactive' flag
+    const { interactive, ...params } = flags
+
     // Step 3 - Verify params
-    const validParams = this.checkFlags(flags, availableProjects)
-    if (validParams !== true) {
-      this.error(validRequirements, { exit: 4 })
+    const invalidParams = this.checkParams(params, availableFlagsValues)
+    if (invalidParams.length !== 0) {
+      const plural = (invalidParams.length > 1) ? 's' : ''
+      let errorMessage = `invalid param${plural} ${EOL}`
+      errorMessage += invalidParams.map(invalidParam => {
+        return `• ${invalidParam}`
+      }).join(EOL)
+      this.error(errorMessage, { exit: 2 })
     }
 
     // (FIXME) Step 4 - Extract data
@@ -108,6 +119,13 @@ export default class Export extends Command {
     return Object.keys(Export.flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
+  }
+
+  /**
+   * List all available exports format
+   */
+  private availableFormats() {
+    return ['csv', 'json']
   }
 
   /**
@@ -137,16 +155,16 @@ export default class Export extends Command {
    * Ask user for missing flags
    */
   private async askMissingFlags(
-    missingFlags: Array<string>, availableProjects: Array<string>
+    missingFlags: Array<string>, availableFlagsValues: any
   ) {
     const questions = missingFlags.map(el => {
       let input = null
       switch (el) {
         case 'format':
-          input = this.askFormat()
+          input = this.askFormat(availableFlagsValues.formats)
           break
         case 'project':
-          input = this.askProject(availableProjects)
+          input = this.askProject(availableFlagsValues.projects)
           break
         case 'from':
           input = this.askStartDate()
@@ -169,10 +187,9 @@ export default class Export extends Command {
    * 'json' or 'csv' are currently supported
    */
   private askFormat(availableFormats: Array<string>): Question {
-    const choices = [
-      { name: 'CSV', value: 'csv' },
-      { name: 'JSON', value: 'json' }
-    ]
+    const choices = availableFormats.map(format => {
+      return { name: format.toUpperCase(), value: format }
+    })
     return {
       type: 'list',
       name: 'format',
@@ -252,8 +269,55 @@ export default class Export extends Command {
   /**
    * Check if all params are valid
    */
-  private checkFlags(flags, availableProjects: Array<string>) {
-    // map or every ?
-    return true
+  private checkParams(params, availableFlagsValues: any) {
+    return Object.keys(params).reduce((acc, key) => {
+      const value = params[key]
+      let valid = true
+      switch (key) {
+        case 'format':
+          valid = this.validateFormat(value, availableFlagsValues.formats)
+          break
+        case 'project':
+          valid = this.validateProject(value, availableFlagsValues.projects)
+          break
+        case 'from':
+          valid = this.validateDateFormat(value, {})
+          break
+        case 'to':
+          valid = this.validateDateFormat(value, params)
+          break
+        default:
+          this.error(`You should not be here with ${key}`, { exit: 3 })
+      }
+      return valid !== true ? acc.concat([valid]) : acc
+    }, [])
+  }
+
+  /**
+   * Validation for format
+   * 'json' or 'csv' are currently supported
+   */
+  private validateFormat(format: string, availableFormats: Array<string>) {
+    let valid = availableFormats.some(availableFormat => {
+      return format === availableFormat
+    })
+    if (!valid) {
+      valid = `Unknow format '${format}' `
+      valid += '(csv and json are currently supported)'
+    }
+    return valid
+  }
+
+  /**
+   * Validation for project
+   */
+  private validateProject(project: string, availableProjects: Array<string>) {
+    let valid = availableProjects.some(availableProject => {
+      return project === availableProject
+    })
+    if (!valid) {
+      valid = `Unknown project '${project}'`
+    }
+    return valid
   }
 }
