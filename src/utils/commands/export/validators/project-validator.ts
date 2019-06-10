@@ -5,12 +5,9 @@ import { Validator } from './validator'
  */
 export default class ProjectValidator implements Validator {
   public isValid(project: string, availableProjects: Array<string>) {
-    let valid: boolean | any = availableProjects.some(availableProject => {
+    let valid: boolean | string = availableProjects.some(availableProject => {
       return project === availableProject
     })
-    if (!valid) {
-      valid = `Unknown project '${project}'`
-    }
-    return valid
+    return valid || `Unknown project '${project}'`
   }
 }

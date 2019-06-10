@@ -1,3 +1,3 @@
 export interface Validator {
-  isValid(value: string, arrayOfValues: Array<any> | null): boolean | string
+  isValid(value: string | any, arrayOfValues: Array<any> | null): boolean | string | Array<string>
 }

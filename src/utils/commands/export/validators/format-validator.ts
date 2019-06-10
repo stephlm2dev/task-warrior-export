@@ -6,12 +6,11 @@ import { Validator } from './validator'
  */
 export default class FormatValidator implements Validator {
   public isValid(format: string, availableFormats: Array<string>) {
-    let valid: boolean | any = availableFormats.some(availableFormat => {
+    let valid: boolean | string = availableFormats.some(availableFormat => {
       return format === availableFormat
     })
     if (!valid) {
-      valid = `Unknow format '${format}' `
-      valid += '(csv and json are currently supported)'
+      valid = `Unknow format '${format}' (csv and json are currently supported)`
     }
     return valid
   }

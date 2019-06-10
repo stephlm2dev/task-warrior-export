@@ -60,7 +60,6 @@ class Constants {
       interactive: flags.boolean({
         char: 'i',
         description: 'interactive mode',
-        multiple: false,
         default: false,
         required: false
       })
