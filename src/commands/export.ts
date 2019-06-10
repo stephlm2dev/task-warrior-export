@@ -9,9 +9,10 @@ import ExportValidator from '../utils/commands/export/validators'
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
 
-  // FIXME add more examples
   static examples = [
-    '$ twe export --interactive'
+    '$ twe export --interactive',
+    '$ twe export --format=json --interactive',
+    '$ twe export --format=csv --project=name --from=2019-12-01 --to=2019-12-15'
   ]
 
   // https://oclif.io/docs/flags
