@@ -2,9 +2,10 @@ import { Command, flags } from '@oclif/command'
 import { prompt, Question, Separator } from 'inquirer'
 import * as moment from 'moment'
 import { EOL } from 'os'
-import { exec, which } from 'shelljs'
+import { which } from 'shelljs'
 
-// Our files - FIXME
+// Our files - FIXME path import
+import { FLAGS, FORMATS, PROJECTS } from '../utils/commands/export/constants'
 import { DateValidator, FormatValidator, ProjectValidator } from '../utils/commands/export/validators'
 
 export default class Export extends Command {
@@ -16,45 +17,7 @@ export default class Export extends Command {
   ]
 
   // https://oclif.io/docs/flags
-  static flags = {
-    // -h, --help
-    help: flags.help({
-      char: 'h',
-      description: 'display help',
-      required: false
-    }),
-    format: flags.string({
-      char: 'f',
-      description: 'output format (ie "json" or "csv")',
-      multiple: false,
-      required: false
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'name of the project',
-      multiple: false,
-      required: false
-    }),
-    from: flags.string({
-      char: 'f',
-      description: 'start date with format "YYYY-MM-DD"',
-      multiple: false,
-      required: false
-    }),
-    to: flags.string({
-      char: 't',
-      description: 'end date with format "YYYY-MM-DD"',
-      multiple: false,
-      required: false
-    }),
-    interactive: flags.boolean({
-      char: 'i',
-      description: 'interactive mode',
-      multiple: false,
-      default: false,
-      required: false
-    })
-  }
+  static flags = FLAGS
 
   // https://oclif.io/docs/args
   static args = []
@@ -64,11 +27,11 @@ export default class Export extends Command {
    */
   async run() {
     let { flags } = this.parse(Export)
-    const availableFlags = this.availableFlags()
+    const availableFlags = this.availableFlags(FLAGS)
     const missingFlags = availableFlags.filter(el => !(el in flags))
     const availableFlagsValues = {
-      formats: this.availableFormats(),
-      projects: this.availableProjects()
+      formats: FORMATS,
+      projects: PROJECTS
     }
 
     // Step 1 - check requirements
@@ -117,29 +80,10 @@ export default class Export extends Command {
   /**
    * CLI flags of 'export' commands
    */
-  private availableFlags() {
-    return Object.keys(Export.flags).filter((el, _index, _array) => {
+  private availableFlags(flags: any) {
+    return Object.keys(flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
-  }
-
-  /**
-   * List all available exports format
-   */
-  private availableFormats() {
-    return ['csv', 'json']
-  }
-
-  /**
-   * List all projects from Taskwarrior
-   */
-  private availableProjects() {
-    const command = 'task rc.list.all.projects=1 _projects'
-    const { stdout, stderr, code } = exec(command, { silent: true })
-    if (code !== 0) {
-      this.error(stderr.trim(), { exit: code })
-    }
-    return stdout.trim().split(EOL)
   }
 
   /**
