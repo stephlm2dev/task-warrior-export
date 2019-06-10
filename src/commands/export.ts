@@ -1,11 +1,10 @@
 import { Command } from '@oclif/command'
-import { prompt, Question } from 'inquirer'
-import * as moment from 'moment'
 import { EOL } from 'os'
 
 // Our files - FIXME path import
 import { FLAGS, FORMATS, PROJECTS } from '../utils/commands/export/constants'
-import ExportValidator, { DateValidator } from '../utils/commands/export/validators'
+import ExportUi from '../utils/commands/export/ui'
+import ExportValidator from '../utils/commands/export/validators'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -48,7 +47,7 @@ export default class Export extends Command {
     // Step 2 - check flags values (or exit)
     if (missingFlags.length !== 0) {
       if (flags.interactive) {
-        const missingFlagsData = await this.askMissingFlags(
+        const missingFlagsData = await new ExportUi().askMissingFlags(
           missingFlags, availableFlagsValues
         )
         flags = { ...flags, ...missingFlagsData }
@@ -84,103 +83,5 @@ export default class Export extends Command {
     return Object.keys(flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
-  }
-
-  /**
-   * Ask user for missing flags
-   */
-  private async askMissingFlags(
-    missingFlags: Array<string>, availableFlagsValues: any
-  ) {
-    const questions = missingFlags.map(el => {
-      let input = null
-      switch (el) {
-        case 'format':
-          input = this.askFormat(availableFlagsValues.formats)
-          break
-        case 'project':
-          input = this.askProject(availableFlagsValues.projects)
-          break
-        case 'from':
-          input = this.askStartDate()
-          break
-        case 'to':
-          input = this.askEndDate()
-          break
-        default:
-          this.error(`You should not be here with ${el}`, { exit: 3 })
-      }
-      return input
-    })
-
-    const answers = await this.askUser(questions)
-    return answers
-  }
-
-  /**
-   * InquirerJS question for output format
-   * 'json' or 'csv' are currently supported
-   */
-  private askFormat(availableFormats: Array<string>): Question {
-    const choices = availableFormats.map(format => {
-      return { name: format.toUpperCase(), value: format }
-    })
-    return {
-      type: 'list',
-      name: 'format',
-      message: 'Which output format do you want ?',
-      default: choices[0].value,
-      choices
-    }
-  }
-
-  /**
-   * InquirerJS question for project
-   */
-  private askProject(availableProjects: Array<string>): Question {
-    return {
-      type: 'list',
-      name: 'project',
-      message: 'Which project ?',
-      default: availableProjects[0],
-      choices: availableProjects,
-      pageSize: availableProjects.length
-    }
-  }
-
-  /**
-   * InquirerJS question for start date export
-   * valide ! (use of moment.js)
-   */
-  private askStartDate(): Question {
-    return {
-      type: 'input',
-      name: 'from',
-      message: 'From which date (YYYY-MM-DD) ?',
-      default: moment().startOf('month').format('YYYY-MM-DD'),
-      validate: new DateValidator().isValid
-    }
-  }
-
-  /**
-   * InquirerJS question for end date export
-   */
-  private askEndDate(): Question {
-    return {
-      type: 'input',
-      name: 'to',
-      message: 'Until which date (YYYY-MM-DD) ?',
-      default: moment().endOf('month').format('YYYY-MM-DD'),
-      validate: new DateValidator().isValid
-    }
-  }
-
-  /**
-   * Ask user input with Inquirer.js
-   *
-   * @see https://github.com/SBoudrias/Inquirer.js
-   */
-  private async askUser(questions: Array<Question>) {
-    return prompt(questions)
   }
 }
