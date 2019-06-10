@@ -15,7 +15,7 @@ export default class ExportValidator {
   public checkRequirements(): Array<string> {
     return this.executables.reduce((acc: Array<any>, executable) => {
       const installed = new SystemRequirementValidator().isValid(executable)
-      return installed ? acc : acc.concat([executable])
+      return installed === true ? acc : acc.concat([installed])
     }, [])
   }
 

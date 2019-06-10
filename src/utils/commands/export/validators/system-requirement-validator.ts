@@ -7,7 +7,8 @@ import { Validator } from './validator'
  */
 export default class SystemRequirementValidator implements Validator {
   public isValid(executable: any) {
-    let valid: boolean | string = which(executable.cmd)
+    const path = which(executable.cmd)
+    let valid: boolean | string = (path !== null)
     if (!valid) {
       valid = `${executable.name} is not installed `
       valid += `(command '${executable.cmd}')`
