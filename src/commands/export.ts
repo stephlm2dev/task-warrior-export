@@ -4,6 +4,9 @@ import * as moment from 'moment'
 import { EOL } from 'os'
 import { exec, which } from 'shelljs'
 
+// Our files - FIXME
+import { DateValidator, FormatValidator, ProjectValidator } from '../utils/commands/export/validators'
+
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
 
@@ -18,7 +21,6 @@ export default class Export extends Command {
     help: flags.help({
       char: 'h',
       description: 'display help',
-      multiple: false,
       required: false
     }),
     format: flags.string({
@@ -74,7 +76,7 @@ export default class Export extends Command {
     if (invalidRequirements.length !== 0) {
       const plural = (invalidRequirements.length > 1) ? 's' : ''
       let errorMessage = `missing requirement${plural} ${EOL}`
-      errorMessage += invalidRequirements.map(executable => {
+      errorMessage += invalidRequirements.map((executable: any) => {
         return `• ${executable.name} is required (command '${executable.cmd}')`
       }).join(EOL)
       this.error(errorMessage, { exit: 2 })
@@ -100,7 +102,7 @@ export default class Export extends Command {
     if (invalidParams.length !== 0) {
       const plural = (invalidParams.length > 1) ? 's' : ''
       let errorMessage = `invalid param${plural} ${EOL}`
-      errorMessage += invalidParams.map(invalidParam => {
+      errorMessage += invalidParams.map((invalidParam: string) => {
         return `• ${invalidParam}`
       }).join(EOL)
       this.error(errorMessage, { exit: 2 })
@@ -134,6 +136,9 @@ export default class Export extends Command {
   private availableProjects() {
     const command = 'task rc.list.all.projects=1 _projects'
     const { stdout, stderr, code } = exec(command, { silent: true })
+    if (code !== 0) {
+      this.error(stderr.trim(), { exit: code })
+    }
     return stdout.trim().split(EOL)
   }
 
@@ -145,7 +150,7 @@ export default class Export extends Command {
       { name: 'Taskwarrior', cmd: 'task' },
       { name: 'Timewarrior', cmd: 'timew' }
     ]
-    return executables.reduce((acc, executable) => {
+    return executables.reduce((acc: Array<any>, executable) => {
       const installed = which(executable.cmd)
       return installed ? acc : acc.concat([executable])
     }, [])
@@ -176,7 +181,7 @@ export default class Export extends Command {
           this.error(`You should not be here with ${el}`, { exit: 3 })
       }
       return input
-    }, {})
+    })
 
     const answers = await this.askUser(questions)
     return answers
@@ -223,7 +228,7 @@ export default class Export extends Command {
       name: 'from',
       message: 'From which date (YYYY-MM-DD) ?',
       default: moment().startOf('month').format('YYYY-MM-DD'),
-      validate: this.validateDateFormat
+      validate: new DateValidator().isValid
     }
   }
 
@@ -236,25 +241,8 @@ export default class Export extends Command {
       name: 'to',
       message: 'Until which date (YYYY-MM-DD) ?',
       default: moment().endOf('month').format('YYYY-MM-DD'),
-      validate: this.validateDateFormat
+      validate: new DateValidator().isValid
     }
-  }
-
-  /**
-   * Validation for input date
-   * Must be a valid date
-   * If 'from' is present, check if 'to' after 'from'
-   */
-  private validateDateFormat(date: string, answers: any) {
-    const momentDate = moment(date, 'YYYY-MM-DD', true)
-    if (!momentDate.isValid()) {
-      return 'Invalid date (YYYY-MM-DD)'
-    }
-    if ('from' in answers) {
-      const momentFrom = moment(answers.from)
-      return momentDate.isAfter(momentFrom) || 'Date is not in the future'
-    }
-    return true
   }
 
   /**
@@ -269,55 +257,27 @@ export default class Export extends Command {
   /**
    * Check if all params are valid
    */
-  private checkParams(params, availableFlagsValues: any) {
-    return Object.keys(params).reduce((acc, key) => {
+  private checkParams(params: any, availableFlagsValues: any) {
+    return Object.keys(params).reduce((acc: Array<any>, key) => {
       const value = params[key]
-      let valid = true
+      let valid: boolean | string = true
       switch (key) {
         case 'format':
-          valid = this.validateFormat(value, availableFlagsValues.formats)
+          valid = new FormatValidator().isValid(value, availableFlagsValues.formats)
           break
         case 'project':
-          valid = this.validateProject(value, availableFlagsValues.projects)
+          valid = new ProjectValidator().isValid(value, availableFlagsValues.projects)
           break
         case 'from':
-          valid = this.validateDateFormat(value, {})
+          valid = new DateValidator().isValid(value, {})
           break
         case 'to':
-          valid = this.validateDateFormat(value, params)
+          valid = new DateValidator().isValid(value, params)
           break
         default:
           this.error(`You should not be here with ${key}`, { exit: 3 })
       }
       return valid !== true ? acc.concat([valid]) : acc
     }, [])
-  }
-
-  /**
-   * Validation for format
-   * 'json' or 'csv' are currently supported
-   */
-  private validateFormat(format: string, availableFormats: Array<string>) {
-    let valid = availableFormats.some(availableFormat => {
-      return format === availableFormat
-    })
-    if (!valid) {
-      valid = `Unknow format '${format}' `
-      valid += '(csv and json are currently supported)'
-    }
-    return valid
-  }
-
-  /**
-   * Validation for project
-   */
-  private validateProject(project: string, availableProjects: Array<string>) {
-    let valid = availableProjects.some(availableProject => {
-      return project === availableProject
-    })
-    if (!valid) {
-      valid = `Unknown project '${project}'`
-    }
-    return valid
   }
 }
