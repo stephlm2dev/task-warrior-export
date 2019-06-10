@@ -1,12 +1,11 @@
-import { Command, flags } from '@oclif/command'
-import { prompt, Question, Separator } from 'inquirer'
+import { Command } from '@oclif/command'
+import { prompt, Question } from 'inquirer'
 import * as moment from 'moment'
 import { EOL } from 'os'
-import { which } from 'shelljs'
 
 // Our files - FIXME path import
 import { FLAGS, FORMATS, PROJECTS } from '../utils/commands/export/constants'
-import { DateValidator, FormatValidator, ProjectValidator } from '../utils/commands/export/validators'
+import ExportValidator, { DateValidator } from '../utils/commands/export/validators'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -33,14 +32,15 @@ export default class Export extends Command {
       formats: FORMATS,
       projects: PROJECTS
     }
+    const validator = new ExportValidator()
 
     // Step 1 - check requirements
-    const invalidRequirements = this.checkRequirements()
+    const invalidRequirements = validator.checkRequirements()
     if (invalidRequirements.length !== 0) {
       const plural = (invalidRequirements.length > 1) ? 's' : ''
       let errorMessage = `missing requirement${plural} ${EOL}`
-      errorMessage += invalidRequirements.map((executable: any) => {
-        return `• ${executable.name} is required (command '${executable.cmd}')`
+      errorMessage += invalidRequirements.map((error: any) => {
+        return `• ${error}`
       }).join(EOL)
       this.error(errorMessage, { exit: 2 })
     }
@@ -61,7 +61,7 @@ export default class Export extends Command {
     const { interactive, ...params } = flags
 
     // Step 3 - Verify params
-    const invalidParams = this.checkParams(params, availableFlagsValues)
+    const invalidParams = validator.checkParams(params, availableFlagsValues)
     if (invalidParams.length !== 0) {
       const plural = (invalidParams.length > 1) ? 's' : ''
       let errorMessage = `invalid param${plural} ${EOL}`
@@ -84,20 +84,6 @@ export default class Export extends Command {
     return Object.keys(flags).filter((el, _index, _array) => {
       return el !== 'help'
     })
-  }
-
-  /**
-   * Check that Taskwarrior and Timewarrior are installed
-   */
-  private checkRequirements(): Array<string> {
-    const executables = [
-      { name: 'Taskwarrior', cmd: 'task' },
-      { name: 'Timewarrior', cmd: 'timew' }
-    ]
-    return executables.reduce((acc: Array<any>, executable) => {
-      const installed = which(executable.cmd)
-      return installed ? acc : acc.concat([executable])
-    }, [])
   }
 
   /**
@@ -196,32 +182,5 @@ export default class Export extends Command {
    */
   private async askUser(questions: Array<Question>) {
     return prompt(questions)
-  }
-
-  /**
-   * Check if all params are valid
-   */
-  private checkParams(params: any, availableFlagsValues: any) {
-    return Object.keys(params).reduce((acc: Array<any>, key) => {
-      const value = params[key]
-      let valid: boolean | string = true
-      switch (key) {
-        case 'format':
-          valid = new FormatValidator().isValid(value, availableFlagsValues.formats)
-          break
-        case 'project':
-          valid = new ProjectValidator().isValid(value, availableFlagsValues.projects)
-          break
-        case 'from':
-          valid = new DateValidator().isValid(value, {})
-          break
-        case 'to':
-          valid = new DateValidator().isValid(value, params)
-          break
-        default:
-          this.error(`You should not be here with ${key}`, { exit: 3 })
-      }
-      return valid !== true ? acc.concat([valid]) : acc
-    }, [])
   }
 }
