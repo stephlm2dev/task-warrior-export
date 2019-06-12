@@ -11,7 +11,12 @@
     "@oclif/command": "1",
     "@oclif/config": "1",
     "@oclif/plugin-autocomplete": "^0.1.0",
-    "@oclif/plugin-help": "1"
+    "@oclif/plugin-help": "1",
+    "@types/inquirer": "^6.0.3",
+    "@types/shelljs": "^0.8.5",
+    "inquirer": "^6.3.1",
+    "moment": "^2.24.0",
+    "shelljs": "^0.8.3"
   },
   "devDependencies": {
     "@oclif/dev-cli": "1",
