@@ -26,50 +26,90 @@ export default class Export extends Command {
    * Entrypoint of the `twe export` command
    */
   async run() {
-    const utils = new ExportUtils()
-    const validator = new ExportValidator()
-
-    // Step 1 - check requirements
-    const invalidRequirements = validator.checkRequirements()
-    if (invalidRequirements.length !== 0) {
-      this.error(
-        utils.errorMessage('missing requirement', invalidRequirements),
-        { exit: 2 }
-      )
+    const tools = {
+      utils: new ExportUtils(),
+      validator: new ExportValidator()
     }
 
-    // Prepare information
-    let { flags } = this.parse(Export)
-    const availableFlags = utils.availableFlags(FLAGS)
-    const missingFlags = availableFlags.filter(el => !(el in flags))
-    const availableFlagsValues = { formats: FORMATS, projects: PROJECTS }
+    // Step 1 - check requirements
+    this.checkRequirements(tools)
 
-    // Step 2 - check flags values (or exit)
+    // Step 2 - Prepare parsing
+    let {
+      flags, availableFlags, missingFlags, availableFlagsValues
+    } = this.prepareCommandParsing(tools)
+
+    // Step 3 - check flags values (or exit)
     if (missingFlags.length !== 0) {
-      if (!flags.interactive) {
-        this.error('Missing parameters', { exit: 3 })
-      }
-      const missingFlagsData = await new ExportUi().askMissingFlags(
-        missingFlags, availableFlagsValues
+      const missingFlagsData = await this.askMissingFlags(
+        flags.interactive, missingFlags, availableFlagsValues
       )
       flags = { ...flags, ...missingFlagsData }
     }
 
-    // Step 2.1 - remove 'interactive' flag
-    const { interactive, ...params } = flags
-
     // Step 3 - Verify params
-    const invalidParams = validator.checkParams(params, availableFlagsValues)
-    if (invalidParams.length !== 0) {
-      this.error(
-        utils.errorMessage('invalid param', invalidParams),
-        { exit: 2 }
-      )
-    }
+    const { interactive, ...params } = flags
+    this.checkParams(tools, params, availableFlagsValues)
 
     // (FIXME) Step 4 - Extract data
     // (FIXME) Step 5 - Filter data
     // (FIXME) Step 6 - Aggregate data
     // (FIXME) Step 7 - Save data
+  }
+
+  /**
+   * Check system requirements
+   */
+  private checkRequirements(tools: any) {
+    // Step 1 - check requirements
+    const invalidRequirements = tools.validator.checkRequirements()
+    if (invalidRequirements.length !== 0) {
+      this.error(
+        tools.utils.errorMessage('missing requirement', invalidRequirements),
+        { exit: 2 }
+      )
+    }
+    return true
+  }
+
+  /**
+   * Prepare some stuff
+   */
+  private prepareCommandParsing(tools: any) {
+    // Prepare information
+    const { flags } = this.parse(Export)
+    const availableFlags = tools.utils.availableFlags(FLAGS)
+    const missingFlags = availableFlags.filter(el => !(el in flags))
+    const availableFlagsValues = { formats: FORMATS, projects: PROJECTS }
+    return { flags, availableFlags, missingFlags, availableFlagsValues }
+  }
+
+  /**
+   * Ask for missing flags when interactive mode
+   */
+  private async askMissingFlags(
+    interactive: boolean, missingFlags: Array<string>, availableFlagsValues: any
+  ) {
+    if (!interactive) {
+      this.error('Missing parameters', { exit: 3 })
+    }
+    const missingFlagsData = await new ExportUi().askMissingFlags(
+      missingFlags, availableFlagsValues
+    )
+    return missingFlagsData
+  }
+
+  /**
+   * Check validity of every params
+   */
+  private checkParams(tools: any, params: any, availableFlagsValues: any) {
+    const invalidParams = tools.validator.checkParams(params, availableFlagsValues)
+    if (invalidParams.length !== 0) {
+      this.error(
+        tools.utils.errorMessage('invalid param', invalidParams),
+        { exit: 2 }
+      )
+    }
+    return true
   }
 }
