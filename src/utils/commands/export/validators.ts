@@ -2,6 +2,7 @@ import DateValidator from './validators/date-validator'
 import FormatValidator from './validators/format-validator'
 import ProjectValidator from './validators/project-validator'
 import SystemRequirementValidator from './validators/system-requirement-validator'
+import TimetrackingValidator from './validators/timetracking-validator'
 
 export default class ExportValidator {
   private executables = [
@@ -51,5 +52,6 @@ export {
   DateValidator,
   FormatValidator,
   ProjectValidator,
-  SystemRequirementValidator
+  SystemRequirementValidator,
+  TimetrackingValidator
 }
