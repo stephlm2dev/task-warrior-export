@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import { parse } from 'json2csv'
 import * as moment from 'moment'
 import { EOL } from 'os'
 
@@ -51,13 +52,17 @@ export default class ExportUtils {
     const toDate = params.to.replace(/-/g, '')
     const project = params.project.replace(/[^a-zA-Z ]/g, '')
     const filename = `${project}-${fromDate}-${toDate}.${params.format}`
-    const writeData = (params.format === 'json') ? JSON.stringify(data) : data
+    let writeData = null
+    if (params.format === 'json') {
+      writeData = this.formatAsJson(data)
+    } else if (params.format === 'csv') {
+      writeData = this.formatAsCsv(data)
+    }
     try {
       fs.writeFileSync(filename, writeData)
       return true
     } catch (err) {
-      // FIXME handle error
-      console.error(err)
+      // FIXME handle error (err)
     }
   }
 
@@ -71,5 +76,24 @@ export default class ExportUtils {
       return `• ${error}`
     }).join(EOL)
     return `${title}${EOL}${details}`
+  }
+
+  /**
+   * Stringify data
+   */
+  private formatAsJson(data) {
+    return JSON.stringify(data)
+  }
+
+  /**
+   * Convert JSON as CSV
+   */
+  private formatAsCsv(data) {
+    const headers = ['start', 'end', 'duration', 'project', 'description']
+    try {
+      return parse(data, { fields: headers })
+    } catch (err) {
+      // FIXME handle error (err)
+    }
   }
 }
