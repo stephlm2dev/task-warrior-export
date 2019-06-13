@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import * as moment from 'moment'
 import { EOL } from 'os'
 
@@ -38,6 +39,25 @@ export default class ExportUtils {
       }).format('HH:mm'),
       project,
       description
+    }
+  }
+
+  /**
+   * Save file on disk
+   */
+  public saveFile(data: Array<any>, params: any) {
+    // #neurodecisions$2019-01-12$2019-12-12.csv
+    const fromDate = params.from.replace(/-/g, '')
+    const toDate = params.to.replace(/-/g, '')
+    const project = params.project.replace(/[^a-zA-Z ]/g, '')
+    const filename = `${project}-${fromDate}-${toDate}.${params.format}`
+    const writeData = (params.format === 'json') ? JSON.stringify(data) : data
+    try {
+      fs.writeFileSync(filename, writeData)
+      return true
+    } catch (err) {
+      // FIXME handle error
+      console.error(err)
     }
   }
 
