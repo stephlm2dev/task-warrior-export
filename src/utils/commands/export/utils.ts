@@ -32,11 +32,13 @@ export default class ExportUtils {
     return {
       start: startDate.format(formatDatetime),
       end: endDate.format(formatDatetime),
-      duration: 'FIXME duration method format HH:mm:'
+      duration: moment({
+        hour: duration.hours(),
+        minute: duration.minutes()
+      }).format('HH:mm'),
       project,
       description
     }
-
   }
 
   /**
