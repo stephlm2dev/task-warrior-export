@@ -15,6 +15,7 @@
     "@types/inquirer": "^6.0.3",
     "@types/shelljs": "^0.8.5",
     "inquirer": "^6.3.1",
+    "json2csv": "^4.5.1",
     "moment": "^2.24.0",
     "moment-range": "^4.0.2",
     "shelljs": "^0.8.3"
