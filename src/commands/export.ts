@@ -2,10 +2,14 @@ import { Command } from '@oclif/command'
 import { EOL } from 'os'
 
 // Our files - FIXME path import
-import { FLAGS, FORMATS, PROJECTS } from '../utils/commands/export/constants'
+import {
+  FLAGS, FORMATS, PROJECTS, TIMETRACKING
+} from '../utils/commands/export/constants'
 import ExportUi from '../utils/commands/export/ui'
 import ExportUtils from '../utils/commands/export/utils'
-import ExportValidator from '../utils/commands/export/validators'
+import ExportValidator, {
+  TimetrackingValidator
+} from '../utils/commands/export/validators'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -51,10 +55,12 @@ export default class Export extends Command {
     const { interactive, ...params } = flags
     this.checkParams(tools, params, availableFlagsValues)
 
-    // (FIXME) Step 4 - Extract data
-    // (FIXME) Step 5 - Filter data
-    // (FIXME) Step 6 - Aggregate data
-    // (FIXME) Step 7 - Save data
+    // Step 4 - Filter data
+    const data = this.filterData(tools, params, TIMETRACKING)
+
+    // (FIXME) Step 5 - Aggregate data
+    // Step 6 - Save data
+    await tools.utils.saveFile(data, params)
   }
 
   /**
@@ -103,7 +109,9 @@ export default class Export extends Command {
    * Check validity of every params
    */
   private checkParams(tools: any, params: any, availableFlagsValues: any) {
-    const invalidParams = tools.validator.checkParams(params, availableFlagsValues)
+    const invalidParams = tools.validator.checkParams(
+      params, availableFlagsValues
+    )
     if (invalidParams.length !== 0) {
       this.error(
         tools.utils.errorMessage('invalid param', invalidParams),
@@ -111,5 +119,20 @@ export default class Export extends Command {
       )
     }
     return true
+  }
+
+  /**
+   * Filter timetracking data from params
+   */
+  private filterData(tools, params: any, timetracking: Array<any>) {
+    return timetracking.reduce((acc: Array<any>, tracking: any) => {
+      let valid: boolean | string = new TimetrackingValidator().isValid(
+        tracking, params
+      )
+      if (valid) {
+        tracking = tools.utils.formatTimetracking(tracking)
+      }
+      return valid ? acc.concat([tracking]) : acc
+    }, [])
   }
 }

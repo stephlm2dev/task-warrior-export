@@ -6,11 +6,13 @@ class Constants {
   private _flags: any
   private _formats: Array<string>
   private _projects: Array<string>
+  private _timetracking: Array<any>
 
   constructor() {
     this._flags = this.setFlags()
     this._formats = this.setFormats()
     this._projects = this.setProjects()
+    this._timetracking = this.setTimetracking()
   }
 
   get flags() {
@@ -23,6 +25,10 @@ class Constants {
 
   get projects() {
     return this._projects
+  }
+
+  get timetracking() {
+    return this._timetracking
   }
 
   private setFlags() {
@@ -86,15 +92,31 @@ class Constants {
      */
     return stdout.trim().split(EOL)
   }
+
+  /**
+   * Export data from Timewarrior
+   */
+  private setTimetracking() {
+    const command = 'timew export'
+    const { stdout, stderr, code } = exec(command, { silent: true })
+    /* FIXME handle error case
+      if (code !== 0) {
+        this.error(stderr.trim(), { exit: code })
+      }
+     */
+    return JSON.parse(stdout)
+  }
 }
 
 const constants = new Constants()
 const FLAGS = constants.flags
 const FORMATS = constants.formats
 const PROJECTS = constants.projects
+const TIMETRACKING = constants.timetracking
 
 export {
   FLAGS,
   FORMATS,
-  PROJECTS
+  PROJECTS,
+  TIMETRACKING
 }
