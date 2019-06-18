@@ -37,7 +37,19 @@ export default class ExportUtils {
    * Aggregate time tracking
    */
   public aggregateData(tools: any, filteredData: Array<any>) {
-    return filteredData
+    return filteredData.reduce((acc: Array<any>, tracking: any) => {
+      const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
+      const formattedStartDate = startDate.format('DD/MM/YYYY')
+      const trackingAsArray = [tracking]
+      if (formattedStartDate in acc) {
+        acc[formattedStartDate] = acc[formattedStartDate].concat(
+          trackingAsArray
+        )
+      } else {
+        acc[formattedStartDate] = trackingAsArray
+      }
+      return acc
+    }, {})
   }
 
   /**
