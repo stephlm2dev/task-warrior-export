@@ -3,6 +3,8 @@ import { parse } from 'json2csv'
 import * as moment from 'moment'
 import { EOL } from 'os'
 
+import { TimetrackingValidator } from './validators'
+
 export default class ExportUtils {
   constructor() {}
 
@@ -17,29 +19,25 @@ export default class ExportUtils {
   }
 
   /**
-   * Format timetracking to standart format
+   * Filter timetracking data from params
    */
-  public formatTimetracking(tracking: any) {
-    // {
-    //  "start":"20190612T150556Z",
-    //  "end":"20190612T170000Z",
-    //  "tags":["#sideproject","Task/time warrior export"]
-    // }
-    const startDate = moment(tracking.start)
-    const endDate = moment(tracking.end)
-    const duration = moment.duration(endDate.diff(startDate))
-    const formatDatetime = 'DD/MM/YYYY HH:mm'
+  public filterData(tools: any, params: any, timetracking: Array<any>) {
+    return timetracking.reduce((acc: Array<any>, tracking: any) => {
+      let valid: boolean | string = new TimetrackingValidator().isValid(
+        tracking, params
+      )
+      if (valid) {
+        tracking = this.formatTimetracking(tracking)
+      }
+      return valid ? acc.concat([tracking]) : acc
+    }, [])
+  }
 
-    const [project, description, ...tags] = tracking.tags
-    return {
-      description,
-      start: startDate.format(formatDatetime),
-      end: endDate.format(formatDatetime),
-      duration: moment({
-        hour: duration.hours(),
-        minute: duration.minutes()
-      }).format('HH:mm')
-    }
+  /**
+   * Aggregate time tracking
+   */
+  public aggregateData(tools: any, filteredData: Array<any>) {
+    return filteredData
   }
 
   /**
@@ -75,6 +73,32 @@ export default class ExportUtils {
       return `• ${error}`
     }).join(EOL)
     return `${title}${EOL}${details}`
+  }
+
+  /**
+   * Format timetracking to standart format
+   */
+  private formatTimetracking(tracking: any) {
+    // {
+    //  "start":"20190612T150556Z",
+    //  "end":"20190612T170000Z",
+    //  "tags":["#sideproject","Task/time warrior export"]
+    // }
+    const startDate = moment(tracking.start)
+    const endDate = moment(tracking.end)
+    const duration = moment.duration(endDate.diff(startDate))
+    const formatDatetime = 'DD/MM/YYYY HH:mm'
+
+    const [project, description, ...tags] = tracking.tags
+    return {
+      description,
+      start: startDate.format(formatDatetime),
+      end: endDate.format(formatDatetime),
+      duration: moment({
+        hour: duration.hours(),
+        minute: duration.minutes()
+      }).format('HH:mm')
+    }
   }
 
   /**
