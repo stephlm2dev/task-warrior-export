@@ -59,7 +59,7 @@ export default class Export extends Command {
     const data = this.filterData(tools, params, TIMETRACKING)
 
     // (FIXME) Step 5 - Aggregate data
-    // (FIXME) Step 6 - Save data
+    // Step 6 - Save data
     await tools.utils.saveFile(data, params)
   }
 
