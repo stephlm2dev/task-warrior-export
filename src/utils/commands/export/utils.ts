@@ -32,14 +32,13 @@ export default class ExportUtils {
 
     const [project, description, ...tags] = tracking.tags
     return {
+      description,
       start: startDate.format(formatDatetime),
       end: endDate.format(formatDatetime),
       duration: moment({
         hour: duration.hours(),
         minute: duration.minutes()
-      }).format('HH:mm'),
-      project,
-      description
+      }).format('HH:mm')
     }
   }
 
@@ -89,7 +88,7 @@ export default class ExportUtils {
    * Convert JSON as CSV
    */
   private formatAsCsv(data) {
-    const headers = ['start', 'end', 'duration', 'project', 'description']
+    const headers = ['description', 'start', 'end', 'duration']
     try {
       return parse(data, { fields: headers })
     } catch (err) {
