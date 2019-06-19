@@ -48,8 +48,10 @@ export default class ExportUtils {
         }
       }
     )
-    // FIXME last line with total !
-    return totalDurationsAsArray
+    const total = totalDurationsAsArray.reduce(this.totalAggregate, {
+      total: 0, human: 0
+    })
+    return totalDurationsAsArray.concat([total])
   }
 
   /**
@@ -141,7 +143,7 @@ export default class ExportUtils {
   /**
    * Aggregate time tracking per day
    */
-  private aggregatePerDay(acc: Array<any>, tracking: any) {
+  private aggregatePerDay(acc: any, tracking: any) {
     const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
     const formattedStartDate = startDate.format('DD/MM/YYYY')
     if (formattedStartDate in acc) {
@@ -179,5 +181,16 @@ export default class ExportUtils {
       roundedManHours = 1
     }
     return roundedManHours
+  }
+
+  /**
+   * Total aggregate of all time tracking
+   */
+  private totalAggregate(acc: any, trackingStats: any) {
+    // FIXME issue with total
+    return {
+      total: acc.total,
+      human: acc.human + trackingStats.human
+    }
   }
 }
