@@ -60,7 +60,8 @@ export default class Export extends Command {
     const aggregatedData = tools.utils.aggregateData(tools, filteredData)
 
     // Step 6 - Save data
-    await tools.utils.saveFile(aggregatedData, params)
+    await tools.utils.saveFile(filteredData, params, 'raw')
+    await tools.utils.saveFile(aggregatedData, params, 'aggregated')
   }
 
   /**

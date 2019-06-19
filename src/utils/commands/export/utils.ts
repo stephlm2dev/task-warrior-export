@@ -34,38 +34,50 @@ export default class ExportUtils {
   }
 
   /**
-   * Aggregate time tracking
+   * Aggregate time tracking for stats
    */
   public aggregateData(tools: any, filteredData: Array<any>) {
-    return filteredData.reduce((acc: Array<any>, tracking: any) => {
-      const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
-      const formattedStartDate = startDate.format('DD/MM/YYYY')
-      const trackingAsArray = [tracking]
-      if (formattedStartDate in acc) {
-        acc[formattedStartDate] = acc[formattedStartDate].concat(
-          trackingAsArray
-        )
-      } else {
-        acc[formattedStartDate] = trackingAsArray
+    const totalDurations = filteredData.reduce(
+      (acc: Array<any>, tracking: any) => {
+        const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
+        const formattedStartDate = startDate.format('DD/MM/YYYY')
+        if (formattedStartDate in acc) {
+          const duration = moment.duration(acc[formattedStartDate]).add(
+            moment.duration(tracking.duration)
+          )
+          acc[formattedStartDate] = moment({
+            hour: duration.hours(),
+            minute: duration.minutes()
+          }).format('HH:mm')
+        } else {
+          acc[formattedStartDate] = tracking.duration
+        }
+        return acc
+      }, []
+    )
+    return Object.keys(totalDurations).map(trackingDate => {
+      return {
+        date: trackingDate,
+        total: totalDurations[trackingDate]
       }
-      return acc
-    }, {})
+    })
   }
 
   /**
    * Save file on disk
    */
-  public saveFile(data: Array<any>, params: any) {
+  public saveFile(data: Array<any>, params: any, prefix: string) {
     // #neurodecisions$2019-01-12$2019-12-12.csv
+    const format = params.format
     const fromDate = params.from.replace(/-/g, '')
     const toDate = params.to.replace(/-/g, '')
     const project = params.project.replace(/[^a-zA-Z ]/g, '')
-    const filename = `${project}-${fromDate}-${toDate}.${params.format}`
+    const filename = `${project}-${fromDate}-${toDate}-${prefix}.${format}`
     let writeData = null
-    if (params.format === 'json') {
+    if (format === 'json') {
       writeData = this.formatAsJson(data)
-    } else if (params.format === 'csv') {
-      writeData = this.formatAsCsv(data)
+    } else if (format === 'csv') {
+      writeData = this.formatAsCsv(data, prefix)
     }
     try {
       fs.writeFileSync(filename, writeData)
@@ -123,8 +135,13 @@ export default class ExportUtils {
   /**
    * Convert JSON as CSV
    */
-  private formatAsCsv(data) {
-    const headers = ['description', 'start', 'end', 'duration']
+  private formatAsCsv(data, prefix) {
+    let headers = null
+    if (prefix === 'raw') {
+      headers = ['description', 'start', 'end', 'duration']
+    } else {
+      headers = ['date', 'total']
+    }
     try {
       return parse(data, { fields: headers })
     } catch (err) {
