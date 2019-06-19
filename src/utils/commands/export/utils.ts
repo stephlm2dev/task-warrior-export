@@ -37,30 +37,19 @@ export default class ExportUtils {
    * Aggregate time tracking for stats
    */
   public aggregateData(tools: any, filteredData: Array<any>) {
-    const totalDurations = filteredData.reduce(
-      (acc: Array<any>, tracking: any) => {
-        const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
-        const formattedStartDate = startDate.format('DD/MM/YYYY')
-        if (formattedStartDate in acc) {
-          const duration = moment.duration(acc[formattedStartDate]).add(
-            moment.duration(tracking.duration)
-          )
-          acc[formattedStartDate] = moment({
-            hour: duration.hours(),
-            minute: duration.minutes()
-          }).format('HH:mm')
-        } else {
-          acc[formattedStartDate] = tracking.duration
+    const totalDurations = filteredData.reduce(this.aggregatePerDay, {})
+    const totalDurationsAsArray = Object.keys(totalDurations).map(
+      trackingDate => {
+        const [hours, minutes] = totalDurations[trackingDate].split(':')
+        return {
+          date: trackingDate,
+          total: `${parseInt(hours, 10)}h ${minutes}min`,
+          human: this.convertToManHours(totalDurations[trackingDate])
         }
-        return acc
-      }, []
-    )
-    return Object.keys(totalDurations).map(trackingDate => {
-      return {
-        date: trackingDate,
-        total: totalDurations[trackingDate]
       }
-    })
+    )
+    // FIXME last line with total !
+    return totalDurationsAsArray
   }
 
   /**
@@ -140,12 +129,55 @@ export default class ExportUtils {
     if (prefix === 'raw') {
       headers = ['description', 'start', 'end', 'duration']
     } else {
-      headers = ['date', 'total']
+      headers = ['date', 'total', 'human']
     }
     try {
       return parse(data, { fields: headers })
     } catch (err) {
       // FIXME handle error (err)
     }
+  }
+
+  /**
+   * Aggregate time tracking per day
+   */
+  private aggregatePerDay(acc: Array<any>, tracking: any) {
+    const startDate = moment(tracking.start, 'DD/MM/YYYY HH:mm')
+    const formattedStartDate = startDate.format('DD/MM/YYYY')
+    if (formattedStartDate in acc) {
+      const duration = moment.duration(acc[formattedStartDate]).add(
+        moment.duration(tracking.duration)
+      )
+      acc[formattedStartDate] = moment({
+        hour: duration.hours(),
+        minute: duration.minutes()
+      }).format('HH:mm')
+    } else {
+      acc[formattedStartDate] = tracking.duration
+    }
+    return acc
+  }
+
+  /**
+   * Convert duration in hours to man hours
+   * 0,25 -> 2h
+   * 0,50 -> 4h (half day)
+   * 0,75 -> 6h
+   * 1,00 -> 8h (full day)
+   */
+  private convertToManHours(duration: string) {
+    const decimalHours = moment.duration(duration).asHours()
+    const rawManHours = (decimalHours * 0.25) / 2
+    let roundedManHours = 0
+    if (rawManHours <= 0.25) {
+      roundedManHours = 0.25
+    } else if (rawManHours > 0.25 && rawManHours <= 0.5) {
+      roundedManHours = 0.5
+    } else if (rawManHours > 0.5 && rawManHours <= 0.75) {
+      roundedManHours = 0.75
+    } else if (rawManHours > 0.75) {
+      roundedManHours = 1
+    }
+    return roundedManHours
   }
 }
