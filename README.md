@@ -35,23 +35,29 @@ USAGE
 
 ## `twe hello [FILE]`
 
-describe the command here
+export data for a specific date / project
 
 ```
 USAGE
-  $ twe hello [FILE]
+  $ twe export
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -f, --format=format    output format (ie "json" or "csv")
+  -f, --from=from        start date with format "YYYY-MM-DD"
+  -h, --help             display help
+  -i, --interactive      interactive mode
+  -p, --project=project  name of the project
+  -t, --to=to            end date with format "YYYY-MM-DD"
 
-EXAMPLE
-  $ twe hello
-  hello world from ./src/hello.ts!
+EXAMPLES
+  $ twe export --interactive
+
+  $ twe export --format=json --interactive
+
+  $ twe export --format=csv --project=name --from=2019-12-01 --to=2019-12-15
 ```
 
-_See code: [src/commands/hello.ts](https://github.com/stephlm2dev/task-warrior-export/blob/v0.0.0/src/commands/hello.ts)_
+_See code: [src/commands/export.ts](https://github.com/stephlm2dev/task-warrior-export/blob/v0.0.0/src/commands/export.ts)_
 
 ## `twe help [COMMAND]`
 
