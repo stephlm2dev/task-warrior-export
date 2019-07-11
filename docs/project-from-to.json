@@ -1,0 +1,22 @@
+[
+  {
+    "task": "<task-description>",
+    "events": [
+      {
+        "start": "<start-datetime>",
+        "end": "<end-datetime>",
+        "hours_duration": "<duration-in-hours>"
+        "human_duration": "<duration-in-human-hours>"
+      }
+    ],
+    "total": {
+      "hours_duration": "<total-duration-in-hours>"
+      "human_duration": "<total-duration-in-human-hours>"
+    }
+  },
+  {
+    "tasks": "<count-tasks> tasks",
+    "hours_duration": "<total-duration-in-hours>"
+    "human_duration": "<total-duration-in-human-hours>"
+  }
+]
