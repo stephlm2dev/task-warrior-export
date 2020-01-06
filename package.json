@@ -68,8 +68,8 @@
     "test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md",
     "commit": "git-cz",
-    "release": "standard-version",
-    "release:beta": "standard-version -p beta"
+    "release": "standard-version -s",
+    "release:beta": "standard-version -s -p beta"
   },
   "types": "lib/index.d.ts",
   "config": {
