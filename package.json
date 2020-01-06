@@ -33,6 +33,7 @@
     "globby": "8",
     "mocha": "5",
     "nyc": "11",
+    "standard-version": "^7.0.1",
     "ts-node": "5",
     "tslib": "1",
     "tslint": "5",
@@ -66,7 +67,9 @@
     "prepack": "rm -rf lib && tsc && oclif-dev manifest && oclif-dev readme",
     "test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "release": "standard-version -s",
+    "release:beta": "standard-version -s -p beta"
   },
   "types": "lib/index.d.ts",
   "config": {
