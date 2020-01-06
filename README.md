@@ -3,6 +3,7 @@ task-warrior-export
 
 Export {task/time}warrior data per month/per project
 
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![Version](https://img.shields.io/npm/v/task-warrior-export.svg)](https://npmjs.org/package/task-warrior-export)
 [![CircleCI](https://circleci.com/gh/stephlm2dev/task-warrior-export/tree/master.svg?style=shield)](https://circleci.com/gh/stephlm2dev/task-warrior-export/tree/master)
 [![Appveyor CI](https://ci.appveyor.com/api/projects/status/github/stephlm2dev/task-warrior-export?branch=master&svg=true)](https://ci.appveyor.com/project/stephlm2dev/task-warrior-export/branch/master)
