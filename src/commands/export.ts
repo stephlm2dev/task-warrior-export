@@ -7,9 +7,7 @@ import {
 } from '../utils/commands/export/constants'
 import ExportUi from '../utils/commands/export/ui'
 import ExportUtils from '../utils/commands/export/utils'
-import ExportValidator, {
-  TimetrackingValidator
-} from '../utils/commands/export/validators'
+import ExportValidator from '../utils/commands/export/validators'
 
 export default class Export extends Command {
   static description = 'export data for a specific date / project'
@@ -56,11 +54,14 @@ export default class Export extends Command {
     this.checkParams(tools, params, availableFlagsValues)
 
     // Step 4 - Filter data
-    const data = this.filterData(tools, params, TIMETRACKING)
+    const filteredData = tools.utils.filterData(tools, params, TIMETRACKING)
 
-    // (FIXME) Step 5 - Aggregate data
+    // Step 5 - Aggregate data
+    const aggregatedData = tools.utils.aggregateData(tools, filteredData)
+
     // Step 6 - Save data
-    await tools.utils.saveFile(data, params)
+    await tools.utils.saveFile(filteredData, params, 'raw')
+    await tools.utils.saveFile(aggregatedData, params, 'aggregated')
   }
 
   /**
@@ -119,20 +120,5 @@ export default class Export extends Command {
       )
     }
     return true
-  }
-
-  /**
-   * Filter timetracking data from params
-   */
-  private filterData(tools, params: any, timetracking: Array<any>) {
-    return timetracking.reduce((acc: Array<any>, tracking: any) => {
-      let valid: boolean | string = new TimetrackingValidator().isValid(
-        tracking, params
-      )
-      if (valid) {
-        tracking = tools.utils.formatTimetracking(tracking)
-      }
-      return valid ? acc.concat([tracking]) : acc
-    }, [])
   }
 }

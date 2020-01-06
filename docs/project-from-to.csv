@@ -1,0 +1,7 @@
+task,start,end,hours_duration,human_duration
+<task-description>,<start-datetime>,<end-datetime>,<hours_duration>,<human_duration>
+                  ,<start-datetime>,<end-datetime>,<hours_duration>,<human_duration>
+                  ,<start-datetime>,<end-datetime>,<hours_duration>,<human_duration>
+                  ,                ,              ,<total_hours_duration>,<total_human_duration>
+
+<count-tasks> tasks,               ,              ,<total-duration-in-hours>,<total-duration-in-human-hours>
